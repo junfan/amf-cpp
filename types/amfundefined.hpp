@@ -2,6 +2,7 @@
 #ifndef AMFUNDEFINED_HPP
 #define AMFUNDEFINED_HPP
 
+#include <array>
 #include <vector>
 #include "amfitem.hpp"
 
@@ -10,7 +11,7 @@ public:
 	AmfUndefined() {}
 
 	std::vector<u8> serialize() const {
-		return std::vector<u8>{ AMF_UNDEFINED };
+		return v8(1, AMF_UNDEFINED);
 	}
 };
 

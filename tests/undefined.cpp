@@ -4,6 +4,7 @@
 #include "types/amfundefined.hpp"
 
 TEST(UndefinedSerializationTest, SimpleValue) {
-	ASSERT_EQ(v8 { 0x00 }, AmfUndefined().serialize());
+	u8 expected[] = { 0x00 };
+	ASSERT_EQ(make_vector(expected), AmfUndefined().serialize());
 }
 

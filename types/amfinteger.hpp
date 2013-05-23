@@ -20,31 +20,35 @@ public:
 
 		// TODO: range checking here? if out of range, serialize as double or throw?
 		if (value >= 0 && value <= 0x7F) {
-			return std::vector<u8> {
+			u8 v[] = {
 				AMF_INTEGER,
 				u8(value)
 			};
+			return make_vector(v);
 		} else if (value > 0x7F && value <= 0x3FFF) {
-			return std::vector<u8> {
+			u8 v[] = {
 				AMF_INTEGER,
 				u8(value >> 7 | 0x80),
 				u8(value & 0x7F)
 			};
+			return make_vector(v);
 		} else if (value > 0x3FFF && value <= 0x1FFFFF) {
-			return std::vector<u8> {
+			u8 v[] = {
 				AMF_INTEGER,
 				u8(value >> 14 | 0x80),
 				u8(((value >> 7) & 0x7F) | 0x80),
 				u8(value & 0x7F)
 			};
+			return make_vector(v);
 		} else {
-			return std::vector<u8> {
+			u8 v[] = {
 				AMF_INTEGER,
 				u8(value >> 22 | 0x80),
 				u8(((value >> 15) & 0x7F) | 0x80),
 				u8(((value >> 8 ) & 0x7F) | 0x80),
 				u8(value & 0xFF)
 			};
+			return make_vector(v);
 		}
 	}
 

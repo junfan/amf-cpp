@@ -38,7 +38,7 @@ public:
 		 * *(value-type)
 		 * *(dynamic-member)
 		 */
-		std::vector<u8> buf = { AMF_OBJECT };
+		std::vector<u8> buf(1, AMF_OBJECT);
 
 		AmfString className(traits.className);
 		// serialized class name with AmfString marker

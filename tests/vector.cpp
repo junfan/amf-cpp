@@ -3,33 +3,33 @@
 #include "amf.hpp"
 #include "types/amfvector.hpp"
 
-template<typename T>
-static void isEqual(const std::vector<u8>& expected, AmfVector<T> vector) {
-	ASSERT_EQ(expected, vector.serialize());
+template<typename T, size_t N>
+static void isEqual(u8 (&expected)[N], AmfVector<T> vector) {
+	ASSERT_EQ(make_vector(expected), vector.serialize());
 }
 
 TEST(VectorSerializationTest, VectorIntEmpty) {
-	AmfVector<int> vec({}, false);
-	v8 expected { 0x0d, 0x01, 0x00 };
-	ASSERT_EQ(expected, vec.serialize());
+	AmfVector<int> vec(std::vector<int>(), false);
+	u8 expected[] = { 0x0d, 0x01, 0x00 };
+	ASSERT_EQ(make_vector(expected), vec.serialize());
 
-	vec = {{}, true};
-	expected = { 0x0d, 0x01, 0x01 };
-	ASSERT_EQ(expected, vec.serialize());
+	vec = AmfVector<int>(std::vector<int>(), true);
+	u8 expected2[] = { 0x0d, 0x01, 0x01 };
+	ASSERT_EQ(make_vector(expected2), vec.serialize());
 }
 
 TEST(VectorSerializationTest, VectorIntSimple) {
-	AmfVector<int> vec({ 1, 2, 3 }, false);
-	v8 expected {
+	int input[] = { 1, 2, 3 };
+	u8 expected[] = {
 		0x0d, 0x07, 0x00,
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02,
 		0x00, 0x00, 0x00, 0x03
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(make_vector(input), false));
 
-	vec = {{ 0xff, 0x100, 0xfffe, 0xffff, 0x123456, 0xfffffff }, true};
-	expected = {
+	int input2[] = { 0xff, 0x100, 0xfffe, 0xffff, 0x123456, 0xfffffff };
+	u8 expected2[] = {
 		0x0d, 0x0d, 0x01,
 		0x00, 0x00, 0x00, 0xff,
 		0x00, 0x00, 0x01, 0x00,
@@ -38,69 +38,68 @@ TEST(VectorSerializationTest, VectorIntSimple) {
 		0x00, 0x12, 0x34, 0x56,
 		0x0f, 0xff, 0xff, 0xff
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected2, AmfVector<int>(make_vector(input2), true));
 }
 
 TEST(VectorSerializationTest, VectorInt32) {
-	AmfVector<int> vec({
+	int input[] = {
 		0x20000000,
 		0x40000000,
 		0x7fffffff
-	}, true);
-	v8 expected {
+	};
+	u8 expected [] = {
 		0x0d, 0x07, 0x01,
 		0x20, 0x00, 0x00, 0x00,
 		0x40, 0x00, 0x00, 0x00,
 		0x7f, 0xff, 0xff, 0xff
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(make_vector(input), true));
 }
 
 TEST(VectorSerializationTest, VectorIntNegative) {
-	AmfVector<int> vec({ -1, -2, -0xffff }, false);
-	v8 expected {
+	int input[] = { -1, -2, -0xffff };
+	u8 expected [] = {
 		0x0d, 0x07, 0x00,
 		0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xfe,
 		0xff, 0xff, 0x00, 0x01
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(make_vector(input), false));
 }
 
 TEST(VectorSerializationTest, VectorInt32Negative) {
-	AmfVector<int> vec({
+	int input[] = {
 		-0x20000000,
 		-0x40000000,
 		-0x7fffffff,
-		-2147483648
-	}, true);
-	v8 expected {
+		-2147483647 - 1
+	};
+	u8 expected [] = {
 		0x0d, 0x09, 0x01,
 		0xe0, 0x00, 0x00, 0x00,
 		0xc0, 0x00, 0x00, 0x00,
 		0x80, 0x00, 0x00, 0x01,
 		0x80, 0x00, 0x00, 0x00
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(make_vector(input), true));
 }
 
 TEST(VectorSerializationTest, VectorIntFixedDefault) {
-	AmfVector<int> vec({1, 3, 5});
-	v8 expected {
+	int input[] = { 1, 3, 5 };
+	u8 expected[] = {
 		0x0d, 0x07, 0x00,
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x03,
 		0x00, 0x00, 0x00, 0x05
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(make_vector(input)));
 }
 
 TEST(VectorSerializationTest, VectorInt2ByteLength) {
-	std::vector<int> num(260);
-	std::iota(num.begin(), num.end(), 0);
+	std::vector<int> num;
+	for (auto i = 0; i < 260; i++) num.push_back(i);
 
-	AmfVector<int> vec(num, true);
-	v8 expected {
+	u8 expected[] = {
 		0x0d, 0x84, 0x09, 0x01,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03,
 		0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x07,
@@ -168,31 +167,31 @@ TEST(VectorSerializationTest, VectorInt2ByteLength) {
 		0x00, 0x00, 0x00, 0xfc, 0x00, 0x00, 0x00, 0xfd, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x00, 0x00, 0xff,
 		0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x02, 0x00, 0x00, 0x01, 0x03,
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<int>(num, true));
 }
 
 TEST(VectorSerializationTest, VectorUintEmpty) {
-	AmfVector<unsigned int> vec({}, false);
-	v8 expected { 0x0e, 0x01, 0x00 };
-	ASSERT_EQ(expected, vec.serialize());
+	AmfVector<unsigned int> vec(std::vector<unsigned int>(), false);
+	u8 expected[] = { 0x0e, 0x01, 0x00 };
+	ASSERT_EQ(make_vector(expected), vec.serialize());
 
-	vec = {{}, true};
-	expected = { 0x0e, 0x01, 0x01 };
-	ASSERT_EQ(expected, vec.serialize());
+	vec = AmfVector<unsigned int>(std::vector<unsigned int>(), true);
+	u8 expected2[] = { 0x0e, 0x01, 0x01 };
+	ASSERT_EQ(make_vector(expected2), vec.serialize());
 }
 
 TEST(VectorSerializationTest, VectorUintSimple) {
-	AmfVector<unsigned int> vec({ 1, 2, 3 }, false);
-	v8 expected {
+	unsigned int input[] = { 1, 2, 3 };
+	u8 expected[] = {
 		0x0e, 0x07, 0x00,
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02,
 		0x00, 0x00, 0x00, 0x03
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<unsigned int>(make_vector(input), false));
 
-	vec = {{ 0xff, 0x100, 0xfffe, 0xffff, 0x123456, 0xfffffff }, true};
-	expected = {
+	unsigned int input2[] = { 0xff, 0x100, 0xfffe, 0xffff, 0x123456, 0xfffffff };
+	u8 expected2[] = {
 		0x0e, 0x0d, 0x01,
 		0x00, 0x00, 0x00, 0xff,
 		0x00, 0x00, 0x01, 0x00,
@@ -201,18 +200,18 @@ TEST(VectorSerializationTest, VectorUintSimple) {
 		0x00, 0x12, 0x34, 0x56,
 		0x0f, 0xff, 0xff, 0xff
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected2, AmfVector<unsigned int>(make_vector(input2), true));
 }
 
 TEST(VectorSerializationTest, VectorUint32) {
-	AmfVector<unsigned int> vec({
+	unsigned int input[] = {
 		0x20000000u,
 		0x40000000u,
 		0x7fffffffu,
 		0x80000000u,
 		0xffffffffu
-	}, true);
-	v8 expected {
+	};
+	u8 expected[] = {
 		0x0e, 0x0b, 0x01,
 		0x20, 0x00, 0x00, 0x00,
 		0x40, 0x00, 0x00, 0x00,
@@ -220,62 +219,59 @@ TEST(VectorSerializationTest, VectorUint32) {
 		0x80, 0x00, 0x00, 0x00,
 		0xff, 0xff, 0xff, 0xff
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<unsigned int>(make_vector(input), true));
 }
 
 TEST(VectorSerializationTest, VectorUintFixedDefault) {
-	AmfVector<unsigned int> vec({1, 3, 5});
-	v8 expected {
+	unsigned int input[] = { 1, 3, 5 };
+	u8 expected[] = {
 		0x0e, 0x07, 0x00,
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x03,
 		0x00, 0x00, 0x00, 0x05
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<unsigned int>(make_vector(input)));
 }
 
 TEST(VectorSerializationTest, VectorDoubleEmpty) {
-	AmfVector<double> vec({}, false);
-	v8 expected { 0x0f, 0x01, 0x00 };
-	ASSERT_EQ(expected, vec.serialize());
+	AmfVector<double> vec(std::vector<double>(), false);
+	u8 expected[] = { 0x0f, 0x01, 0x00 };
+	ASSERT_EQ(make_vector(expected), vec.serialize());
 }
 
 TEST(VectorSerializationTest, VectorDoubleSimple) {
-	AmfVector<double> vec({0}, true);
-	v8 expected {
+	double input[] = { 0 };
+	u8 expected[] =  {
 		0x0f, 0x03, 0x01,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<double>(make_vector(input), true));
 
-	vec = {{0.5}, false};
-	expected = {
+	double input2[] = { 0.5 };
+	u8 expected2[] = {
 		0x0f, 0x03, 0x00,
 		0x3f, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected2, AmfVector<double>(make_vector(input2), false));
 
-	vec = {
-		{ -1.2, 0.3333333333333333, -0.3333333333333333, 2.5e+51 },
-		false
-	};
-	expected = {
+	double input3[] = { -1.2, 0.3333333333333333, -0.3333333333333333, 2.5e+51 };
+	u8 expected3[] = {
 		0x0f, 0x09, 0x00,
 		0xbf, 0xf3, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 		0x3f, 0xd5, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
 		0xbf, 0xd5, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
 		0x4a, 0x9a, 0xba, 0x47, 0x14, 0x95, 0x7d, 0x30
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected3, AmfVector<double>(make_vector(input3), false));
 }
 
 TEST(VectorSerializationTest, VectorDoubleFixedDefault) {
-	AmfVector<double> vec({3.14159});
-	v8 expected {
+	double input[] = { 3.14159 };
+	u8 expected[] = {
 		0x0f, 0x03, 0x00,
 		0x40, 0x09, 0x21, 0xf9, 0xf0, 0x1b, 0x86, 0x6e
 	};
-	ASSERT_EQ(expected, vec.serialize());
+	isEqual(expected, AmfVector<double>(make_vector(input)));
 }
 
 TEST(VectorSerializationTest, VectorLongLongNotConstructible) {

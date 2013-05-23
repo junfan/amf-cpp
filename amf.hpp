@@ -21,6 +21,15 @@ T swap_endian(T x) {
 	return x;
 }
 
+// Hack to allow semi-nice vector initialization, even in Visual Studio.
+// Usage:
+//   int _v[] = { 1, 2, 3 };
+//   std::vector<int> v(FROM_ARRAY(_v));
+template <typename T, size_t N>
+std::vector<T> make_vector(T (&arr)[N]) {
+	return std::vector<T>(arr, arr + N);
+}
+
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define hton(x) swap_endian(x)
 #define ntoh(x) swap_endian(x)

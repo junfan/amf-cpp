@@ -11,7 +11,8 @@ public:
 	operator double() const { return value; }
 
 	std::vector<u8> serialize() const {
-		std::vector<u8> buf = { AMF_DOUBLE };
+		u8 v[] = { AMF_DOUBLE };
+		v8 buf = make_vector(v);
 
 		double netvalue = hton(value);
 		const u8* bytes = reinterpret_cast<const u8*>(&netvalue);

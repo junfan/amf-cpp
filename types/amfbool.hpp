@@ -11,7 +11,7 @@ public:
 	operator bool() const { return value; }
 
 	std::vector<u8> serialize() const {
-		return std::vector<u8>{ value ? AMF_TRUE : AMF_FALSE };
+		return v8(1, value ? AMF_TRUE : AMF_FALSE);
 	}
 
 private:

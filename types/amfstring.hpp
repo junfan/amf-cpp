@@ -12,8 +12,10 @@ public:
 	operator std::string() const { return value; }
 
 	std::vector<u8> serialize() const {
-		if(value.empty())
-			return std::vector<u8>{ AMF_STRING, 0x01 };
+		if(value.empty()) {
+			u8 v[] = { AMF_STRING, 0x01 };
+			return make_vector(v);
+		}
 
 		// strings are encoded as AMF_STRING, followed by their length and
 		// the string encoded as UTF8. thus, we start by serializing the

@@ -10,7 +10,7 @@ public:
 	AmfNull() { }
 
 	std::vector<u8> serialize() const {
-		return std::vector<u8>{ AMF_NULL };
+		return v8(1, AMF_NULL);
 	}
 };
 

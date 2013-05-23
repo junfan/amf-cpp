@@ -4,5 +4,6 @@
 #include "types/amfnull.hpp"
 
 TEST(NullSerializationTest, SimpleValue) {
-	ASSERT_EQ(v8 { 0x01 }, AmfNull().serialize());
+	u8 expected[] = { 0x01 };
+	ASSERT_EQ(make_vector(expected), AmfNull().serialize());
 }

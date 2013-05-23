@@ -3,11 +3,14 @@
 #include "amf.hpp"
 #include "types/amfbool.hpp"
 
-static void isEqual(const std::vector<u8>& expected, bool value) {
-	ASSERT_EQ(expected, AmfBool(value).serialize());
+template <size_t N>
+static void isEqual(u8 (&expected)[N], bool value) {
+	ASSERT_EQ(make_vector(expected), AmfBool(value).serialize());
 }
 
 TEST(BoolSerializationTest, SimpleValues) {
-	isEqual(v8 { 0x02 }, false);
-	isEqual(v8 { 0x03 }, true);
+	u8 v1[] = { 0x02 };
+	isEqual(v1, false);
+	u8 v2[] = { 0x03 };
+	isEqual(v2, true);
 }
